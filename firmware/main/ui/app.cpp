@@ -59,8 +59,9 @@ constexpr int kNameX = 68;
 // Level 13 of the panel palette (#DDDDDD): the header/footer fill in the mockup.
 constexpr uint16_t kHeaderFill = TFT_WHITE;
 constexpr uint16_t kFooterFill = TFT_WHITE;
-// Locked (too large) files are drawn in this grey, like the mockup row.
-constexpr uint16_t kLockedInk = 0x9CF3;
+// Locked (too large) files keep black ink: DU cannot reproduce grey, and a grey
+// attempt turns into speckle. They are marked by the lock icon and the italic face.
+constexpr uint16_t kLockedInk = TFT_BLACK;
 constexpr int kScrollbarWidth = 4;
 constexpr uint8_t kScrollbarLevel = 6;
 
@@ -1746,16 +1747,18 @@ void App::render_content_row(int row) {
 
     const FileEntry& entry = _entries[static_cast<size_t>(index)];
     const bool selected = index == _cursor;
+
+    // Files above the open limits are refused by the reader: they get a lock icon and,
+    // since DU cannot render grey, the italic face instead of a greyed-out colour.
+    const bool locked = !entry.is_dir && entry.size > max_openable_size(entry.name);
+
     // The selected row uses the bold face: same grid, visibly heavier letters.
-    const auto& body = selected ? find_ui_font(2, true) : find_ui_font(2);
+    const auto& body = selected ? find_ui_font(2, true)
+                                : (locked ? find_ui_font(2, false, true) : find_ui_font(2));
     const auto& meta = find_ui_font(1, true);  // 18 px bold, uppercase format
     const auto& small_meta = find_ui_font(0);  // 14 px size
     const int top = kHeaderHeight + kListTopGap + row * kRowPitch;
     const int baseline = row_baseline(row);
-
-    // Files above the open limits are shown greyed with a lock, exactly like the
-    // mockup: the reader would refuse them.
-    const bool locked = !entry.is_dir && entry.size > max_openable_size(entry.name);
 
     gfx.fillRect(0, top, width, kRowHeight, TFT_WHITE);
     const uint16_t ink = locked ? kLockedInk : TFT_BLACK;
@@ -1845,7 +1848,9 @@ void App::render_scrollbar(bool content_area) {
         const int scrollable = total - rows;
         offset = scrollable > 0 ? (track - thumb) * _scroll / scrollable : 0;
     }
-    ui::fill_level(gfx, width - kScrollbarWidth, top + offset, kScrollbarWidth, thumb, kScrollbarLevel);
+    // Solid black, not a palette level: DU refreshes cannot reproduce grey, and a grey
+    // bar simply disappears on the panel.
+    gfx.fillRect(width - kScrollbarWidth, top + offset, kScrollbarWidth, thumb, TFT_BLACK);
 }
 
 void App::render_content() {

@@ -101,9 +101,14 @@ const FontFaceData& find_font(int size_index, Face face) {
     return face_data != nullptr ? *face_data : *kFontAtlas[0][kColumnRegular];
 }
 
-const FontFaceData& find_ui_font(int size_index, bool bold) {
+const FontFaceData& find_ui_font(int size_index, bool bold, bool italic) {
     const int index = size_index < 0 ? 0 : (size_index > 4 ? 4 : size_index);
     const int size = kUiToAtlas[index];
+    if (italic) {
+        const FontFaceData* italic_data =
+            kFontAtlas[size][bold ? kColumnBoldItalic : kColumnItalic];
+        if (italic_data != nullptr) return *italic_data;
+    }
     const FontFaceData* face_data = kFontAtlas[size][bold ? kColumnMonoBold : kColumnMono];
     return face_data != nullptr ? *face_data : *kFontAtlas[0][kColumnMono];
 }

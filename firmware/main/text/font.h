@@ -38,7 +38,8 @@ int font_size_count();
 const FontFaceData& find_font(int size_index, Face face);
 
 // Monospace face used by UI chrome (file manager rows, status bars).
-const FontFaceData& find_ui_font(int size_index, bool bold = false);
+const FontFaceData& find_ui_font(int size_index, bool bold = false,
+                                 bool italic = false);
 
 // Face for a heading level (1..6) at a body size; clamped to available sizes.
 const FontFaceData& find_heading_font(int size_index, int level);

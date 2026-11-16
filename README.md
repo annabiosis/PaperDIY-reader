@@ -9,10 +9,34 @@ A paginated e-ink ebook reader for the M5Stack M5PaperDIY (K159 / K159-B).
 
 ## Screenshots
 
-| File manager | Reading |
+All frames are read back from the panel itself over the debug console, at the native 540 × 960.
+
+### File manager
+
+| Root | Folder contents |
 |:---:|:---:|
-| ![File manager with folders, icons and a selected book](docs/shots/filemanager.png) | ![Paginated reading screen with hyphenated text](docs/shots/reader.png) |
-| Folders first, format and size metadata, and the bold selected row with its filled icon and cursor. | Paginated text with hyphenation, page/percentage footer and button hints. |
+| ![Root listing with folders](docs/shots/filemanager-root.png) | ![Book list with formats and sizes](docs/shots/filemanager-list.png) |
+| Directories in square brackets, format and size on the right. | The selected row uses the bold face, the filled icon variant and the cursor sprite. |
+| ![List scrolled to the end](docs/shots/filemanager-scrolled.png) | ![Locked files](docs/shots/filemanager-locked.png) |
+| Long folders scroll; the bar on the right is solid black. | Files above the open limit are shown with a lock icon and the italic face. |
+
+### Reader
+
+| TXT | Markdown |
+|:---:|:---:|
+| ![Plain text page](docs/shots/reader-txt.png) | ![Markdown page with styles](docs/shots/reader-markdown.png) |
+| Hyphenation, widow and orphan control, 24 px reading size. | Headings, bold, italic, quotes, rules and code. |
+| ![EPUB page](docs/shots/reader-epub.png) | ![FB2 page with references](docs/shots/reader-fb2.png) |
+| EPUB: the footer counts real pages (`N / M`). | FB2: reference markers `[1]`, `[2]`, `[3]` inside the text. |
+
+### References and footnotes
+
+| Short note | Long note |
+|:---:|:---:|
+| ![Short footnote panel](docs/shots/notes-short.png) | ![Long footnote panel](docs/shots/notes-long.png) |
+| A short note shrinks the panel to its content: no scrolling at all. | A long note keeps half the screen, scrolls, and the page slides up so the reference stays visible. |
+| ![Note scrolled inside the panel](docs/shots/notes-scrolled.png) | |
+| Scrolling inside the note; the page shift is temporary and leaving the mode restores the reading position. | |
 
 ## Features
 
