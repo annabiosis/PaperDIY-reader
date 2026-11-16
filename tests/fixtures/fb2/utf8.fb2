@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0">
+  <description>
+    <title-info>
+      <book-title>Тестовая книга</book-title>
+      <author>
+        <first-name>Иван</first-name>
+        <middle-name>Петрович</middle-name>
+        <last-name>Сидоров</last-name>
+      </author>
+      <author>
+        <first-name>Анна</first-name>
+        <last-name>Морозова</last-name>
+      </author>
+    </title-info>
+  </description>
+  <body>
+    <section>
+      <title><p>Глава первая</p></title>
+      <p>Первый абзац и <emphasis>курсив</emphasis>, <strong>жирный</strong> и A &amp; B.</p>
+      <empty-line/>
+      <p>Второй абзац.</p>
+      <p>Третий абзац.</p>
+      <subtitle>Подзаголовок</subtitle>
+      <code>int main() { return 0; }</code>
+      <table>
+        <tr><td>Ячейка 1</td><td>Ячейка 2</td></tr>
+        <tr><td>Ячейка 3</td><td>Ячейка 4</td></tr>
+      </table>
+      <p>Символы: &amp; &lt; &gt; &quot; &apos; &#1055; &#x41; и <unknown>мусор</unknown> &bogus; конец.</p>
+      <p>Картинка: <image l:href="#pic"/> и текст.</p>
+    </section>
+  </body>
+  <binary id="pic" content-type="image/png">iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==</binary>
+</FictionBook>

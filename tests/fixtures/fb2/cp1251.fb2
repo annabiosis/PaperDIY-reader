@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0">
+  <description>
+    <title-info>
+      <book-title>Кириллица</book-title>
+      <author><first-name>Пётр</first-name><last-name>Иванов</last-name></author>
+    </title-info>
+  </description>
+  <body>
+    <section>
+      <title><p>Глава</p></title>
+      <p>Привет, мир! Это CP1251.</p>
+    </section>
+  </body>
+</FictionBook>

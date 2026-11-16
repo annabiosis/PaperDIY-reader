@@ -1,0 +1,32 @@
+# Build output
+firmware/build/
+firmware/build*/
+tests/build/
+build/
+*.log
+*.bin
+*.elf
+*.map
+
+# Generated configuration
+sdkconfig
+sdkconfig.old
+dependencies.lock
+
+# Components fetched by vendor/M5PaperDIY-UserDemo/fetch_repos.py
+vendor/M5PaperDIY-UserDemo/components/
+vendor/M5PaperDIY-UserDemo/_component_backups/
+vendor/M5PaperDIY-UserDemo/.fetch_repos-*
+
+# Books and user data (never publish reading material)
+books/
+tests/books/
+demo/*.epub
+demo/*.pdf
+demo/*.fb2
+demo/*.txt
+
+# Python
+__pycache__/
+*.pyc
+.venv/

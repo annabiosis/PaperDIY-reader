@@ -1,0 +1,3 @@
+[submodule "vendor/M5PaperDIY-UserDemo"]
+	path = vendor/M5PaperDIY-UserDemo
+	url = https://github.com/m5stack/M5PaperDIY-UserDemo.git
