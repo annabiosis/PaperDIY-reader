@@ -386,13 +386,14 @@ bool Paginator::next(PageView& page) {
                 started = true;
             }
             y += gap;
+            const uint64_t finished_token = paragraph.token;
             _queue.pop_front();
             if (!_queue.empty()) {
                 _next_position = PagePos{_queue.front().paragraph.token, _queue.front().char_offset};
             } else if (!_exhausted && fetch_paragraph()) {
                 _next_position = PagePos{_queue.front().paragraph.token, 0};
             } else {
-                _next_position = PagePos{paragraph.token, 0};
+                _next_position = PagePos{finished_token, 0};
             }
             continue;
         }
@@ -413,13 +414,14 @@ bool Paginator::next(PageView& page) {
             page.lines.push_back(std::move(line));
             y += height + 6;
             placed_any = true;
+            const uint64_t finished_token = paragraph.token;
             _queue.pop_front();
             if (!_queue.empty()) {
                 _next_position = PagePos{_queue.front().paragraph.token, _queue.front().char_offset};
             } else if (!_exhausted && fetch_paragraph()) {
                 _next_position = PagePos{_queue.front().paragraph.token, 0};
             } else {
-                _next_position = PagePos{paragraph.token, 0};
+                _next_position = PagePos{finished_token, 0};
             }
             continue;
         }
@@ -597,14 +599,17 @@ bool Paginator::next(PageView& page) {
         }
 
         queued.char_offset = consumed_cp;
-        if (paragraph_finished && queued.char_offset >= paragraph_chars(paragraph)) {
+        const uint64_t paragraph_token = paragraph.token;
+        const uint32_t paragraph_length = paragraph_chars(paragraph);
+        if (paragraph_finished && queued.char_offset >= paragraph_length) {
+            // pop_front() destroys the paragraph this reference points at.
             _queue.pop_front();
             if (!_queue.empty()) {
                 _next_position = PagePos{_queue.front().paragraph.token, _queue.front().char_offset};
             } else if (!_exhausted && fetch_paragraph()) {
                 _next_position = PagePos{_queue.front().paragraph.token, 0};
             } else {
-                _next_position = PagePos{paragraph.token, paragraph_chars(paragraph)};
+                _next_position = PagePos{paragraph_token, paragraph_length};
             }
         } else {
             _next_position = PagePos{paragraph.token, queued.char_offset};
