@@ -438,6 +438,14 @@ Date: 2026-11-13. Based on specification v1.1 and the customer's answers.
     already show, while taking a strip of every row. `render_scrollbar()` and both of its call
     sites are removed; the metadata column keeps a plain 12 px right inset. The note panel keeps
     its own indicator inside the panel, where it really does say how much of the note is left.
+    Verified on the panel: the right edge of the file manager now has zero ink there.
+
+65. **`rdr version` prints a real build stamp.** The first version used the date and time from
+    `esp_app_desc`, which ESP-IDF fills when CMake is *configured*, not when the image is built:
+    it happily reported a 22:17 build for an image compiled at 00:04. The stamp now comes from
+    `string(TIMESTAMP ...)` in `main/CMakeLists.txt`, attached to the component target (a
+    top-level `add_compile_definitions` does not reach component targets), and reads
+    `rdr version 1.0.0 built 2026-11-17 00:04`.
 
 ## v1 limitations
 

@@ -1,5 +1,9 @@
 #include "debug/console.h"
 #include <esp_app_desc.h>
+
+#ifndef BUILD_STAMP
+#define BUILD_STAMP "unknown"
+#endif
 #include "ui/draw.h"
 
 #include <cerrno>
@@ -366,8 +370,8 @@ void handle_command(char* line) {
         // Release identification: version, plus the build date ESP-IDF records.
         const esp_app_desc_t* desc = esp_app_get_description();
         char reply[192];
-        std::snprintf(reply, sizeof(reply), "rdr version %s %s %s\n", desc->version, desc->date,
-                      desc->time);
+        std::snprintf(reply, sizeof(reply), "rdr version %s built %s\n", desc->version,
+                      BUILD_STAMP);
         write_str(reply);
         return;
     }

@@ -64,3 +64,8 @@ idf_component_register(
         esp_driver_usb_serial_jtag
         nvs_flash
 )
+
+# Build stamp for `rdr version`: a release has to be able to say when it was built, and
+# esp_app_desc only records when CMake was configured.
+string(TIMESTAMP BUILD_STAMP "%Y-%m-%d %H:%M")
+target_compile_definitions(${COMPONENT_LIB} PRIVATE BUILD_STAMP="${BUILD_STAMP}")

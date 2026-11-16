@@ -11,3 +11,6 @@ set(PROJECT_VER "1.0.0")
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 idf_build_set_property(MINIMAL_BUILD ON)
 project(ereader)
+
+# esp_app_desc carries the configure time, not the build time; the build stamp is added
+# to the main component (see main/CMakeLists.txt).
