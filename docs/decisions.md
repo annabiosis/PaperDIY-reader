@@ -424,6 +424,15 @@ Date: 2026-11-13. Based on specification v1.1 and the customer's answers.
     the host sends ~2.9 KB pieces and checks each `rdr ok <n>` reply. Restoring the test book
     took 65 s for 759 964 bytes.
 
+63. **Versioning and release.** The firmware version is defined once, in
+    `firmware/CMakeLists.txt` (`set(PROJECT_VER "1.0.0")`), and read at runtime through
+    `esp_app_get_description()`, so `rdr ping`, `rdr version` and the boot log can never
+    disagree with the build. Semantic versioning is mapped onto the firmware contract: MAJOR
+    breaks on-card data or a user-facing contract (progress schema, `broken-`/`fixed-` naming,
+    console protocol), MINOR adds features, PATCH fixes. The first public release is **1.0.0**:
+    the feature set is complete for the declared scope and the on-card format is frozen from
+    here on, which is exactly what a 1.x promise should mean.
+
 ## v1 limitations
 
 - Files up to 10 MB (PDF), up to 8 MB (text/EPUB), limited by free

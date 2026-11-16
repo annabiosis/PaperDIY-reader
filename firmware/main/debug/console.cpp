@@ -1,4 +1,5 @@
 #include "debug/console.h"
+#include <esp_app_desc.h>
 #include "ui/draw.h"
 
 #include <cerrno>
@@ -356,7 +357,18 @@ void handle_command(char* line) {
     }
 
     if (std::strcmp(verb, "ping") == 0) {
-        write_str("rdr pong ereader 1.0\n");
+        char reply[96];
+        std::snprintf(reply, sizeof(reply), "rdr pong ereader %s\n", esp_app_get_description()->version);
+        write_str(reply);
+        return;
+    }
+    if (std::strcmp(verb, "version") == 0) {
+        // Release identification: version, plus the build date ESP-IDF records.
+        const esp_app_desc_t* desc = esp_app_get_description();
+        char reply[192];
+        std::snprintf(reply, sizeof(reply), "rdr version %s %s %s\n", desc->version, desc->date,
+                      desc->time);
+        write_str(reply);
         return;
     }
     if (std::strcmp(verb, "note") == 0) {

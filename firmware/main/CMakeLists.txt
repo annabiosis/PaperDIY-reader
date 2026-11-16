@@ -52,6 +52,7 @@ idf_component_register(
         "text"
         "ui"
     REQUIRES
+        app_update
         M5GFX
         M5Unified
         json

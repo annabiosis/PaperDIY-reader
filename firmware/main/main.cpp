@@ -7,6 +7,7 @@
  */
 #include <M5Unified.h>
 #include <driver/gpio.h>
+#include <esp_app_desc.h>
 #include <esp_log.h>
 
 #include "board/board.h"
@@ -18,12 +19,15 @@
 namespace {
 
 constexpr char kTag[] = "ereader";
-constexpr char kVersion[] = "1.0";
+
+// The version comes from PROJECT_VER in firmware/CMakeLists.txt, so a release
+// bump touches exactly one line.
+const char* firmware_version() { return esp_app_get_description()->version; }
 
 } // namespace
 
 extern "C" void app_main(void) {
-    ESP_LOGI(kTag, "E-Reader %s for M5PaperDIY", kVersion);
+    ESP_LOGI(kTag, "E-Reader %s for M5PaperDIY", firmware_version());
 
     if (!reader::board().init()) {
         ESP_LOGE(kTag, "board init failed");

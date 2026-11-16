@@ -6,6 +6,8 @@ A paginated e-ink ebook reader for the M5Stack M5PaperDIY (K159 / K159-B).
 - **Firmware:** ESP-IDF 5.5.1.
 - **Formats:** TXT, Markdown, FB2, EPUB, PDF (text layer only).
 - **License:** MIT.
+- **Version:** reported by the firmware itself — `rdr version` over the debug console, or the
+  `E-Reader <version>` line in the boot log. See [CHANGELOG.md](CHANGELOG.md).
 
 ## Screenshots
 
