@@ -433,6 +433,12 @@ Date: 2026-11-13. Based on specification v1.1 and the customer's answers.
     the feature set is complete for the declared scope and the on-card format is frozen from
     here on, which is exactly what a 1.x promise should mean.
 
+64. **The right-edge scrollbar is gone.** It was a 4 px bar (a palette level first, then solid
+    black after DU refused grey) and it carried no information the footer and the list did not
+    already show, while taking a strip of every row. `render_scrollbar()` and both of its call
+    sites are removed; the metadata column keeps a plain 12 px right inset. The note panel keeps
+    its own indicator inside the panel, where it really does say how much of the note is left.
+
 ## v1 limitations
 
 - Files up to 10 MB (PDF), up to 8 MB (text/EPUB), limited by free

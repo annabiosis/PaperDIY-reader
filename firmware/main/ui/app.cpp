@@ -62,8 +62,8 @@ constexpr uint16_t kFooterFill = TFT_WHITE;
 // Locked (too large) files keep black ink: DU cannot reproduce grey, and a grey
 // attempt turns into speckle. They are marked by the lock icon and the italic face.
 constexpr uint16_t kLockedInk = TFT_BLACK;
-constexpr int kScrollbarWidth = 4;
-constexpr uint8_t kScrollbarLevel = 6;
+// Right inset of the row metadata column (the scrollbar that used to live here is gone).
+constexpr int kRowRightInset = 12;
 
 std::string extension_of(const std::string& name) {
     const size_t dot = name.find_last_of('.');
@@ -1783,7 +1783,7 @@ void App::render_content_row(int row) {
         if (locked) size = "( ! ) " + size;
         const int ext_width = measure_text(meta, extension);
         const int size_width = measure_text(small_meta, size);
-        const int meta_right = width - kScrollbarWidth - 8;
+        const int meta_right = width - kRowRightInset;
         ui::draw_text(gfx, meta_right - ext_width, top + 9, extension, meta,
                       ui::TextOptions{ink, TFT_WHITE, -1});
         ui::draw_text(gfx, meta_right - size_width, top + 33, size, small_meta,
@@ -1820,39 +1820,6 @@ void App::render_cursor_marks(int row) {
     ui::draw_icon(gfx, "cursor", 0, top + (kRowHeight - 24) / 2, TFT_BLACK, TFT_WHITE);
 }
 
-void App::render_scrollbar(bool content_area) {
-    auto& gfx = board().display();
-    const int width = board().width();
-    const int top = content_area ? kHeaderHeight + kListTopGap : kHeaderHeight;
-    int bottom = board().height() - kFooterHeight;
-    if (!content_area && _link_mode && _link_panel_h > 0) {
-        bottom = board().height() - kFooterHeight - _link_panel_h; // stop at the panel
-    }
-    if (bottom - top < 24) return;
-    const int track = bottom - top;
-    if (track <= 8) return;
-
-    int thumb = track;
-    int offset = 0;
-    if (_screen == Screen::Reader) {
-        // Progress through the book.
-        const int permille = _page.permille > 1000 ? 1000 : static_cast<int>(_page.permille);
-        thumb = std::max(12, track * 100 / std::max(1, static_cast<int>(permille) + 100));
-        thumb = std::max(12, track * 1000 / std::max(1000, static_cast<int>(_page.permille) + 1));
-        offset = (track - thumb) * permille / 1000;
-    } else {
-        const int total = static_cast<int>(_entries.size());
-        const int rows = visible_rows();
-        if (total <= rows) return; // nothing to scroll
-        thumb = std::max(12, track * rows / total);
-        const int scrollable = total - rows;
-        offset = scrollable > 0 ? (track - thumb) * _scroll / scrollable : 0;
-    }
-    // Solid black, not a palette level: DU refreshes cannot reproduce grey, and a grey
-    // bar simply disappears on the panel.
-    gfx.fillRect(width - kScrollbarWidth, top + offset, kScrollbarWidth, thumb, TFT_BLACK);
-}
-
 void App::render_content() {
     auto& gfx = board().display();
     const int width = board().width();
@@ -1866,8 +1833,7 @@ void App::render_content() {
         // cursor-only path draws them separately.
         const int cursor_row = _cursor - _scroll;
         if (cursor_row >= 0 && cursor_row < rows) render_cursor_marks(cursor_row);
-        render_scrollbar(true);
-
+    
         if (_entries.empty()) {
             const auto& body = find_ui_font(3); // 28 px, same as dialogs
             ui::draw_text(gfx, 22, kHeaderHeight + 8 + body.ascent + 3, "No books in this folder", body,
@@ -1937,9 +1903,6 @@ void App::render_content() {
                           ui::TextOptions{TFT_BLACK, TFT_WHITE, -1});
         }
     }
-    // The reading progress bar is clipped to the page band: in note mode it must not run
-    // through the panel and look like the panel's own scrollbar.
-    render_scrollbar(false);
     if (_link_mode) {
         render_link_marks();
         render_link_panel();

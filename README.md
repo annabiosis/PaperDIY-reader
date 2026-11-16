@@ -20,7 +20,7 @@ All frames are read back from the panel itself over the debug console, at the na
 | ![Root listing with folders](docs/shots/filemanager-root.png) | ![Book list with formats and sizes](docs/shots/filemanager-list.png) |
 | Directories in square brackets, format and size on the right. | The selected row uses the bold face, the filled icon variant and the cursor sprite. |
 | ![List scrolled to the end](docs/shots/filemanager-scrolled.png) | ![Locked files](docs/shots/filemanager-locked.png) |
-| Long folders scroll; the bar on the right is solid black. | Files above the open limit are shown with a lock icon and the italic face. |
+| Long folders scroll with the held button; no scrollbar decoration. | Files above the open limit are shown with a lock icon and the italic face. |
 
 ### Reader
 

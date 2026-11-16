@@ -96,7 +96,6 @@ class App : public GestureSink {
     void render_content_row(int row);
     void render_row_icon(int row, uint16_t ink);
     const char* icon_name_for(const FileEntry& entry, bool locked, bool selected) const;
-    void render_scrollbar(bool content_area);
     int row_baseline(int row) const;
     void render_cursor_marks(int row);
     void render_footer();
