@@ -395,6 +395,14 @@ Date: 2026-11-13. Based on specification v1.1 and the customer's answers.
     715–738 px, i.e. always above the panel border. Leaving the mode still restores the exact
     reading position, because the paginator is never touched.
 
+59. **The pointer always lands on a real line.** The page shift was anchored on the
+    focused line's baseline while the renderer clips lines by their box, so the focused
+    line itself could be clipped and the cursor pointed at empty paper. The shift is now
+    computed from the line box (`y + height`), the focused line is exempt from clipping, and
+    an upper bound keeps it below the header. Measured over five consecutive references:
+    every position has 2056–2323 px of ink on the cursor line, with the panel at 459 px for
+    long notes and 172–316 px for short ones.
+
 ## v1 limitations
 
 - Files up to 10 MB (PDF), up to 8 MB (text/EPUB), limited by free

@@ -1114,8 +1114,17 @@ void App::prepare_link_text() {
     if (link.line >= 0 && link.line < static_cast<int>(_page.lines.size()) && !_page.lines.empty()) {
         const LineView& line = _page.lines[static_cast<size_t>(link.line)];
         const int panel_top = height - kFooterHeight - panel_h;
-        const int limit = panel_top - 10;
-        if (line.baseline > limit) _page_shift = limit - line.baseline;
+        // Anchor on the line's BOX, not its baseline: the renderer clips any line whose
+        // box touches the panel, and anchoring on the baseline clipped the focused line
+        // itself, so the cursor pointed at empty paper.
+        const int box_bottom_limit = panel_top - 6;
+        if (line.y + line.height > box_bottom_limit) {
+            _page_shift = box_bottom_limit - (line.y + line.height);
+        }
+        const int header_limit = kHeaderHeight + 4;
+        if (line.y + _page_shift < header_limit) {
+            _page_shift = header_limit - line.y;
+        }
     }
     _link_panel_h = panel_h;
 
@@ -1857,6 +1866,7 @@ void App::render_content() {
     // the focused link, so it has to be recomputed before the page is drawn.
     if (_link_mode) prepare_link_text();
     const int shift = _link_mode ? _page_shift : 0;
+    const int link_line = _link_mode ? focused_link_line() : -1;
 
     // "Translucent" shade above the panel: a flat grey strip painted UNDER the text, so
     // the lines that cross it stay readable (black on grey) instead of being covered.
@@ -1871,7 +1881,8 @@ void App::render_content() {
         // visible band instead of drawing them over the header or under the panel.
         if (_link_mode && _link_panel_h > 0) {
             const int panel_top = board().height() - kFooterHeight - _link_panel_h;
-            if (line_y < kHeaderHeight || line_y + line.height > panel_top) continue;
+            const bool focused = link_line >= 0 && &line == &_page.lines[static_cast<size_t>(link_line)];
+            if (!focused && (line_y < kHeaderHeight || line_y + line.height > panel_top)) continue;
         }
         if (line.kind == ParaKind::Separator) {
             gfx.drawFastHLine(line.x, base, width - 2 * kMarginLeft, TFT_BLACK);
