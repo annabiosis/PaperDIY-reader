@@ -175,7 +175,7 @@ std::string lower_utf8(const std::string& text) {
                 i += 2;
                 continue;
             }
-            if (d == 0x81) { // Ё -> ё
+            if (d == 0x81) { // Yo -> yo (CP1251 upper case)
                 out += "\xD1\x91";
                 i += 2;
                 continue;

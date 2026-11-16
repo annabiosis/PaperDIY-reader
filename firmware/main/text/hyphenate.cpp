@@ -7,16 +7,16 @@ namespace {
 
 bool is_russian_vowel(uint32_t cp) {
     switch (cp) {
-    case 0x0430: // а
-    case 0x0435: // е
-    case 0x0451: // ё
-    case 0x0438: // и
-    case 0x043E: // о
-    case 0x0443: // у
-    case 0x044B: // ы
-    case 0x044D: // э
-    case 0x044E: // ю
-    case 0x044F: // я
+    case 0x0430: // a
+    case 0x0435: // e
+    case 0x0451: // yo
+    case 0x0438: // i
+    case 0x043E: // o
+    case 0x0443: // u
+    case 0x044B: // y
+    case 0x044D: // e (hard)
+    case 0x044E: // yu
+    case 0x044F: // ya
         return true;
     default:
         return false;
@@ -26,10 +26,10 @@ bool is_russian_vowel(uint32_t cp) {
 // Letters that belong to the previous syllable: a break next to them is invalid.
 bool sticks_to_previous(uint32_t cp) {
     switch (cp) {
-    case 0x0439: // й
-    case 0x044C: // ь
-    case 0x044A: // ъ
-    case 0x044B: // ы
+    case 0x0439: // i kratkoye (semivowel)
+    case 0x044C: // soft sign
+    case 0x044A: // hard sign
+    case 0x044B: // y
         return true;
     default:
         return false;
@@ -120,9 +120,9 @@ size_t hyphenation_points(const char* word, size_t length, uint32_t* out, size_t
         bool allowed = explicit_break[i];
         if (!allowed) {
             // School hyphenation rules:
-            //   * one consonant between vowels goes to the next syllable (во-да);
+            //   * one consonant between vowels goes to the next syllable (vo-da);
             //   * a consonant cluster between vowels breaks before its last
-            //     consonant (кув-шин, об-сер-ва-то-рия).
+            //     consonant (kuv-shin, ob-ser-va-to-riya).
             if (is_russian_vowel(previous) && !is_russian_vowel(next)) {
                 allowed = (i + 1 >= count) || is_russian_vowel(codepoints[i + 1]);
             } else if (!is_russian_vowel(previous) && !is_russian_vowel(next)) {

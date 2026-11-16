@@ -675,7 +675,7 @@ class InlineParser {
                 continue;
             }
 
-            // ![alt](src) -> [изображение: alt]
+            // ![alt](src) -> [image: alt]
             if (c == '!' && i + 1 < end && s[i + 1] == '[' && bracket_possible) {
                 size_t close_bracket = 0;
                 size_t close_paren = 0;
