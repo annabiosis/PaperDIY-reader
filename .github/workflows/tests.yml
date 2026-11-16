@@ -11,6 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Sanitizer diagnostics (temporary)
+        run: |
+          g++ -std=c++17 -O0 -g -fsanitize=address,undefined -fno-omit-frame-pointer -I firmware/main \
+            firmware/main/core/utf8.cpp firmware/main/text/font.cpp firmware/main/text/layout.cpp \
+            firmware/main/text/hyphenate.cpp firmware/main/text/atlas/atlas_catalog.cpp \
+            firmware/main/text/atlas/atlas_14.cpp firmware/main/text/atlas/atlas_18.cpp \
+            firmware/main/text/atlas/atlas_24.cpp firmware/main/text/atlas/atlas_28.cpp \
+            firmware/main/text/atlas/atlas_32.cpp tests/test_layout.cpp -o /tmp/test_layout_asan
+          /tmp/test_layout_asan || true
+
       - name: Build and run host tests
         run: |
           sudo apt-get update -qq
