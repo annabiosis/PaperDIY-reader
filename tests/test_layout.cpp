@@ -1,5 +1,11 @@
 // Host tests for pagination: geometry, text conservation, font sizes, styles.
 #include <cstdio>
+
+// Stage markers: the Linux CI build has crashed before; a marker tells which block.
+static void stage(const char* name) {
+    std::fprintf(stderr, "[stage] %s\n", name);
+    std::fflush(stderr);
+}
 #include <deque>
 #include <memory>
 #include <string>
@@ -429,14 +435,23 @@ void test_no_orphans_or_widows() {
 } // namespace
 
 int main() {
+    stage("geometry");
     test_geometry_and_conservation();
+    stage("font-size");
     test_font_size_changes_page_count();
+    stage("seek");
     test_seek_resumes();
+    stage("styles");
     test_styles();
+    stage("long-word");
     test_long_word_and_empty_lines();
+    stage("invisible");
     test_invisible_and_special_characters();
+    stage("glyphs");
     test_glyph_coverage();
+    stage("hyphenation");
     test_hyphenation_points();
+    stage("widows");
     test_no_orphans_or_widows();
 
     std::printf("%d checks, %d failure(s)\n", g_checks, g_failures);

@@ -27,11 +27,15 @@ run_target() {
     local exe="tests/build/${name}"
     local -a args=("${common[@]}" -o "$exe" "${core[@]}")
 
+    local need_miniz=0
     for src in "${srcs[@]}"; do
         case "$src" in
-            *formats/epub.cpp|*formats/pdf.cpp) args+=(-I tests/support/miniz "${miniz[@]}") ;;
+            *formats/epub.cpp|*formats/pdf.cpp) need_miniz=1 ;;
         esac
     done
+    if [ "$need_miniz" -eq 1 ]; then
+        args+=(-I tests/support/miniz "${miniz[@]}")
+    fi
     args+=("${srcs[@]}")
 
     echo "== build ${name}"
