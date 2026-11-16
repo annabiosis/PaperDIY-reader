@@ -1099,9 +1099,15 @@ void App::prepare_link_text() {
     // Panel height follows the content for SHORT notes only. A note that needs more
     // than half the screen always gets half the screen: a squeezed panel made long
     // footnotes painful to read and to scroll.
-    const int header_h = 4 + 12 + heading.line_height + 10 + 10 + 10;
+    // One source of truth for the geometry: the header block is identical here and in
+    // render_link_panel(), and the body needs `lines * line_height` plus a small tail.
+    constexpr int kBorder = 4;
+    constexpr int kPadTop = 12;
+    constexpr int kPadBottom = 10;
+    const int header_h = kBorder + kPadTop + heading.line_height + 10 + 10 + kPadBottom;
     const int body_h = static_cast<int>(_link_lines.size()) * body.line_height;
-    const int wanted_h = header_h + body_h + 18;
+    const int tail = 10; // keeps the last descender off the panel edge
+    const int wanted_h = header_h + body_h + tail;
     const int half_screen = (height - kFooterHeight) / 2;
     int panel_h = wanted_h < half_screen ? std::max(kPanelMin, wanted_h) : half_screen;
     if (panel_h > panel_max) panel_h = panel_max;
@@ -1129,9 +1135,11 @@ void App::prepare_link_text() {
     _link_panel_h = panel_h;
 
     _link_line = link.line;
-    const int top = height - kFooterHeight - panel_h;
-    const int available = height - kFooterHeight - 8 - (top + header_h);
-    _link_visible = std::max(1, (available - body.ascent) / body.line_height);
+    // Same formula as the height above: a short note must never need scrolling because
+    // of a one-line arithmetic difference between "how tall is the panel" and "how many
+    // lines fit into it".
+    const int body_space = panel_h - header_h - tail + body.line_height / 2;
+    _link_visible = std::max(1, body_space / body.line_height);
     _link_max_scroll = std::max(0, static_cast<int>(_link_lines.size()) - _link_visible);
 }
 
@@ -1225,9 +1233,9 @@ void App::render_link_panel() {
         _link_lines_note = link.note;
     }
 
-    const int available = height - kFooterHeight - 8 - (y + 0);
-    _link_visible = std::max(1, (available - body.ascent) / body.line_height);
-    _link_max_scroll = std::max(0, static_cast<int>(_link_lines.size()) - _link_visible);
+    // The number of visible lines is decided in prepare_link_text(): computing it again
+    // here with a slightly different formula hid the last line of short notes and made
+    // them scroll for no reason.
     if (_link_scroll > _link_max_scroll) _link_scroll = _link_max_scroll;
     if (_link_scroll < 0) _link_scroll = 0;
 
@@ -1813,7 +1821,11 @@ void App::render_scrollbar(bool content_area) {
     auto& gfx = board().display();
     const int width = board().width();
     const int top = content_area ? kHeaderHeight + kListTopGap : kHeaderHeight;
-    const int bottom = board().height() - kFooterHeight;
+    int bottom = board().height() - kFooterHeight;
+    if (!content_area && _link_mode && _link_panel_h > 0) {
+        bottom = board().height() - kFooterHeight - _link_panel_h; // stop at the panel
+    }
+    if (bottom - top < 24) return;
     const int track = bottom - top;
     if (track <= 8) return;
 
@@ -1920,7 +1932,8 @@ void App::render_content() {
                           ui::TextOptions{TFT_BLACK, TFT_WHITE, -1});
         }
     }
-    // The mockup puts a thin scrollbar on the right in the reader as well.
+    // The reading progress bar is clipped to the page band: in note mode it must not run
+    // through the panel and look like the panel's own scrollbar.
     render_scrollbar(false);
     if (_link_mode) {
         render_link_marks();

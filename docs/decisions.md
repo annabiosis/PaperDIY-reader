@@ -403,6 +403,22 @@ Date: 2026-11-13. Based on specification v1.1 and the customer's answers.
     every position has 2056–2323 px of ink on the cursor line, with the panel at 459 px for
     long notes and 172–316 px for short ones.
 
+60. **Short notes fit exactly, long notes get half a screen.** The panel height and the
+    number of visible lines were computed in two places with slightly different formulas, so
+    a four-line note got a panel that showed three lines and a scrollbar. The height is now
+    derived in exactly one place (`prepare_link_text`): body space is
+    `panel_h - header - tail`, and a note that needs more than half the usable height gets
+    exactly half. Measured with the new `rdr note` diagnostic: short notes report
+    `lines=4 visible=4 max=0 panel_h=236` (no scrolling), long ones
+    `lines=22 visible=10 max=12 panel_h=459` (half screen, scrollable), and pages without
+    references report `panel_h=0`, i.e. the panel disappears.
+    The reader's progress bar is also clipped to the page band while the panel is open, so it
+    cannot be mistaken for the note's scrollbar.
+
+61. **`rdr note` reports the reference-mode state.** Print-only command:
+    `mode, focus, links, lines, visible, max, panel_h, shift`. It made the geometry
+    regression above visible over serial without reading pixels.
+
 ## v1 limitations
 
 - Files up to 10 MB (PDF), up to 8 MB (text/EPUB), limited by free

@@ -356,6 +356,16 @@ void handle_command(char* line) {
         write_str("rdr pong ereader 1.0\n");
         return;
     }
+    if (std::strcmp(verb, "note") == 0) {
+        // Reports the reference-mode geometry: what the note panel decided to show.
+        char reply[160];
+        std::snprintf(reply, sizeof(reply), "rdr note mode=%d focus=%d links=%d lines=%d visible=%d max=%d panel_h=%d shift=%d\n",
+                      app().link_mode() ? 1 : 0, app().link_focus(), app().link_count(),
+                      app().link_line_count(), app().link_visible(), app().link_max_scroll(),
+                      app().link_panel_height(), app().page_shift());
+        write_str(reply);
+        return;
+    }
     if (std::strcmp(verb, "fill") == 0) {
         // Paints a 120x120 square with one panel level: checks fill_level() itself.
         const int level = arguments[0] ? std::atoi(arguments) : 12;

@@ -36,6 +36,15 @@ class App : public GestureSink {
     void set_open_limit(uint64_t bytes);
     // Text currently drawn on screen (for end-to-end checks over serial).
     std::string dump_text();
+    // Reference-mode geometry, read-only, for the debug console.
+    bool link_mode() const { return _link_mode; }
+    int link_focus() const { return _link_focus; }
+    int link_count() const { return static_cast<int>(_page_links.size()); }
+    int link_line_count() const { return static_cast<int>(_link_lines.size()); }
+    int link_visible() const { return _link_visible; }
+    int link_max_scroll() const { return _link_max_scroll; }
+    int link_panel_height() const { return _link_panel_h; }
+    int page_shift() const { return _page_shift; }
 
   private:
     struct FileEntry {

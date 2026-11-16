@@ -1,179 +1,207 @@
-# PaperDIY Reader
+# E-Reader for M5PaperDIY
 
-An e-ink ebook reader firmware for the **M5Stack M5PaperDIY** (ESP32-S3, 540×960 parallel e-ink panel, two buttons, SD card). It reads TXT, Markdown, FB2, EPUB and PDF, keeps per-book progress, and treats the panel as what it is: a slow, 16-level display with no backlight and no partial-update free lunch.
+A paginated e-ink ebook reader for the M5Stack M5PaperDIY (K159 / K159-B).
 
-![File manager](docs/shots/filemanager.png)
-![Reading screen](docs/shots/reader.png)
+- **Hardware:** M5PaperDIY, ESP32-S3, 540 × 960 parallel e-ink panel with 16 grayscale levels, PSRAM, microSD, buttons A/B.
+- **Firmware:** ESP-IDF 5.5.1.
+- **Formats:** TXT, Markdown, FB2, EPUB, PDF (text layer only).
+- **License:** MIT.
+
+## Screenshots
+
+| File manager | Reading |
+|:---:|:---:|
+| ![File manager with folders, icons and a selected book](docs/shots/filemanager.png) | ![Paginated reading screen with hyphenated text](docs/shots/reader.png) |
+| Folders first, format and size metadata, and the bold selected row with its filled icon and cursor. | Paginated text with hyphenation, page/percentage footer and button hints. |
 
 ## Features
 
-**Reading**
-- Page-based layout with hyphenation: Russian school rules plus the soft hyphens already present in the book.
-- Widow and orphan control: a paragraph never leaves a single line at the bottom, a page never starts with a lone last line.
-- Three font sizes, PT Serif for book text, JetBrains Mono for UI chrome, all rasterised with FreeType hinting into 1-bit masks.
-- Styles from the source: headings, bold, italic, bold-italic, quotes, lists, code, separators.
-- Encoding autodetect per file: UTF-8 (with or without BOM), CP1251, UTF-16 LE/BE.
+### Reader
 
-**Navigation**
-- A/B page turns with auto-repeat, A+B opens and leaves a book.
-- Long A+B starts the book from the beginning.
-- Hold B + tap A / hold A + tap B change the font size.
-- Real page numbers `N / M` with the reading percentage; the total is counted in the background and recomputed after a font change.
-- The last opened book reopens at the saved position after a power cycle; progress is written on every page turn.
+- **Page-based layout** for every supported format. There is no scrolling: each page is laid out for the 540 × 960 screen.
+- **Hyphenation** for Cyrillic words using Russian school rules, plus soft hyphens (U+00AD) already present in the book. Headings, lists and code are not hyphenated.
+- **Widow and orphan control:** a paragraph is not left with one lonely line at the bottom or top of a page.
+- **Three text sizes.** Book text uses PT Serif; all interface text uses JetBrains Mono.
+- **Loading screen:** files above 300 KB show three discrete steps (read, parse, layout) with a progress bar; smaller books open immediately.
+- **Images** in EPUB and FB2 are skipped in v1. EPUB and Markdown emit a short text placeholder.
 
-**References and footnotes**
-- Long A+B in the reader enters reference mode: A/B move the focus between references, the focused line is marked with the same cursor sprite as the file manager.
-- A panel at the bottom shows the note text at the smallest reading size, with the note's own heading and a progress bar when it does not fit.
-- The page shifts temporarily so the focused reference stays visible above the panel; leaving the mode restores the exact reading position.
-- Hold A + tap B / hold B + tap A scroll the note; short A+B leaves the mode.
+### Navigation
 
-**File manager**
-- Directories in square brackets, icons from the design set (folders, files, locked files), format and size on the right.
-- The selected row uses the bold face, the filled icon variant and the cursor sprite — no inverted blocks of ink.
-- Files that cannot be opened (above the size limits) are greyed out with a lock icon.
-- Scrollbar, and a bottom bar that only exists in the reader.
+- **Per-book progress:** paragraph position, character offset, page number, layout signature and file size are stored for each book. Every page turn writes the position immediately.
+- **Page numbers and percentage** in the footer, plus a thin reading-progress bar. EPUB and PDF count the total in the background when memory allows; TXT, Markdown and FB2 show `N / ...` because a second full copy of the document would not fit in RAM.
+- **Auto-resume:** if the device is switched off while a book is open, the next boot reopens that book at the saved position.
+- **Footnote/reference mode** for FB2 books (see below).
+- **Last book preselected** in the file manager after leaving the reader.
 
-**E-ink specific**
-- Pages refresh with DU (~330 ms) and every 4th page gets a full GC16 pass; the file manager uses DU, small patches use DU4.
-- Refresh regions are merged and escalated to a full pass only when it is actually cheaper.
-- A boot splash and a three-step loading screen keep the panel from looking dead while a book is parsed.
+### File manager
 
-**Maintenance**
-- If a file fails to parse, the reader can rewrite it as UTF-8 (encoding detection with a CP1251 fallback, control characters stripped, bare `&` escaped, closing tag appended), verify that the repaired copy opens, and ask what to do with it: `A — replace` (the broken original is kept as `broken-<name>`) or `B — keep` (the copy is written as `fixed-<name>`).
-- A serial debug console behind USB provides screenshots, dumps, benchmarks, key injection and file transfer (`rdr ...` commands, see below).
+- Folder navigation with `[..]`, directories sorted before files, and only supported extensions listed.
+- Icons for folders, books and locked files; the selected row is bold, uses the filled icon and gets a cursor arrow.
+- Full-height list, a 4 px scrollbar, format and size metadata.
+- Files above the open limit are greyed out with a lock icon and `( ! )` before the size.
+
+### E-ink behaviour
+
+- **Regional updates:** the UI marks only the rectangles that changed; overlapping and adjacent rectangles are merged before they reach the panel.
+- **Fast page turns:** pages use DU (`epd_fast`, roughly 330–400 ms). Every fourth page frame is forced to GC16 (about 1.3 s) to remove ghosting; `rdr clean` forces one on demand.
+- **Mixed modes:** partial status-bar updates use GC16, message and repair dialogs use a full GC16 frame, and ordinary content changes use DU.
+- **Safety valve:** if dirty regions cover more than 68% of the screen or 20 partial updates accumulate, the driver performs a full refresh.
+- **Crisp text:** glyph masks contain only 0 and 255, so DU pages do not show half-covered pixels.
+
+### Maintenance
+
+- **On-device repair:** if a TXT, Markdown or FB2 file fails to parse, the reader re-encodes it as UTF-8, sanitises it and offers the result. **A** replaces the original (kept as `broken-<name>`); **B** keeps both files (`fixed-<name>`). `rdr heal <path>` runs the same repair manually.
+- **Battery gauge:** percentage and level icon in the header, refreshed every 60 seconds. When the gauge is not readable, the value is shown as `--`.
+- **Debug console:** `rdr ...` commands over USB-Serial-JTAG, with a Python client in `tools/devtool.py`.
 
 ## Requirements
 
-- M5Stack M5PaperDIY (the firmware targets its ESP32-S3, 540×960 panel, PMIC and SD wiring).
-- ESP-IDF **5.5.1** (IDF 6.x does not build the vendor M5Unified I2S driver).
-- Python 3.10+ for the tools (Pillow, freetype-py) and for the vendor component fetcher.
-- A microSD card formatted as FAT32.
+| Item | Requirement |
+|---|---|
+| Board | M5PaperDIY (K159 / K159-B): ESP32-S3, 540 × 960 16-level e-ink, PSRAM, microSD, buttons A/B |
+| SDK | ESP-IDF 5.5.1 with the ESP32-S3 toolchain |
+| Host tools | Python 3; Pillow for the generators and `devtool.py` screenshots (freetype-py for hinted atlases); pyserial for `tools/devtool.py` |
+| Card | microSD formatted as FAT32 |
+| Cable | USB data cable for flashing and the serial console |
 
 ## Build and flash
 
-```bash
-git clone --recurse-submodules https://github.com/annabiosis/PaperDIY-reader
-cd PaperDIY-reader
-python vendor/M5PaperDIY-UserDemo/fetch_repos.py    # pulls M5GFX, M5Unified, LGFX_Fonts at pinned revisions
-```
-
-Then, with ESP-IDF 5.5.1 activated (on Windows the helper script does it for you):
+Run these commands from the repository root. The board support code is the `vendor/M5PaperDIY-UserDemo` checkout; its pinned components are downloaded by `fetch_repos.py`.
 
 ```powershell
+# once: initialize the vendored SDK and its pinned components
+git submodule update --init --recursive
+python vendor\M5PaperDIY-UserDemo\fetch_repos.py
+
+# activate ESP-IDF 5.5.1 in the current PowerShell session
 . .\tools\idf_env.ps1 -Version 5.5.1
+
+# build and flash (COM5 -> your port)
 cd firmware
 idf.py build
-idf.py -p COM5 flash monitor
+idf.py -p COM5 flash
 ```
 
-On Linux/macOS activate the IDF export script instead of `idf_env.ps1`:
-
-```bash
-. $IDF_PATH/export.sh
-cd firmware && idf.py build && idf.py -p /dev/ttyACM0 flash
-```
-
-The firmware is a normal ESP-IDF project: `firmware/CMakeLists.txt` adds the vendor components as `EXTRA_COMPONENT_DIRS`, `firmware/partitions.csv` defines the layout, and the font/icon atlases are pre-generated C++ files under `firmware/main/text/atlas/` and `firmware/main/ui/`.
+`tools/build.ps1` wraps the same steps: `.\tools\build.ps1 -Flash -Port COM5` (add `-Monitor` to open the serial monitor). `tools/idf_env.ps1` expects ESP-IDF at `C:\esp\5.5.1\esp-idf` and the tools under `C:\Espressif\tools`; adjust the script or export your own IDF environment if your installation is elsewhere.
 
 ## First run
 
-1. Copy books to the SD card (`/sdcard/books/...` is a convenient default).
-2. Insert the card and power the device on.
-3. The file manager starts in the last used directory. A+B opens the selected file, A+B again returns to the manager.
+1. Format a microSD card as FAT32 and copy books to the root or any folder.
+2. Insert the card and power on. The file manager opens at the root, or at the last used folder.
+3. Select a book and press **A+B** to open it.
+4. Progress and settings are stored in `/sdcard/.reader/progress.json`. The `.reader` folder is created on first use; the JSON is written through a temporary file and renamed into place.
 
-Progress and settings live in `/sdcard/.reader/progress.json` (positions, page numbers, font size, the "book was open" flag). Delete that file to reset everything.
+Supported files:
 
-Size limits: 8 MB for text formats (TXT/MD/FB2/EPUB), 12 MB for PDF; larger files are shown greyed out and are not opened.
+| Extension | What the reader does |
+|---|---|
+| `.txt` | Plain text. Detects UTF-8 and UTF-16LE/BE from BOMs, CP1251 from an XML declaration, then validates UTF-8 and falls back to CP1251. |
+| `.md`, `.markdown` | Headings, bold and italic, lists, block quotes, inline and fenced code, horizontal rules and tables. |
+| `.fb2` | XML FB2: sections, headings, emphasis/strong, footnote bodies and links. |
+| `.epub` | ZIP + OPF + XHTML, chapters in spine order. Images are skipped with a text placeholder. |
+| `.pdf` | Text layer only: FlateDecode, ToUnicode, xref tables and object streams; the text is reflowed for the screen. Scans are rejected. |
+
+Progress is keyed by the book path. The entry also remembers the file size; if the file on the card changes, the old position is ignored and reading starts from the beginning. The same JSON holds the font size, the last opened file and the `reading` flag used for auto-resume.
 
 ## Controls
 
 | Gesture | File manager | Reader |
 |---|---|---|
-| A | previous entry | previous page |
-| B | next entry | next page |
-| hold A / hold B | auto-repeat through the list | auto-repeat page turning |
-| A+B (short) | open the selected entry | back to the file manager (or leave reference mode) |
-| A+B (long) | open the book from the beginning | enter reference mode |
-| hold B + tap A | go to the top of the list | larger font |
-| hold A + tap B | jump one screen down the list | smaller font |
-| power key | handled by the PMIC: a single press power-cycles the board, a double press switches it off | same |
+| **A** | Cursor up | Previous page |
+| **B** | Cursor down | Next page |
+| **Hold A** or **hold B** | Auto-repeat cursor movement after 500 ms | Auto-repeat page turning after 500 ms |
+| **A+B**, short (under 500 ms) | Enter folder, open book, or go to `[..]` | Exit to file manager (position saved) |
+| **A+B**, long (800 ms or more) | Open the selected book from page 1 (drops its saved position) | Enter reference/footnote mode |
+| **Hold B + tap A** | Jump to the first entry | Larger font (in reference mode: scroll note up) |
+| **Hold A + tap B** | Page down, or the last entry if the page is short | Smaller font (in reference mode: scroll note down) |
+| **Power key** | Single press power-cycles the board; double press powers off (handled by the PMIC, not the firmware) | Same |
+
+While a message is shown, **A+B** dismisses it. In the repair confirmation, **A** replaces the original and **B** keeps both files.
+
+## Reference and footnote mode
+
+Hold **A+B** in the reader to enter reference mode for books with footnotes (currently FB2 with a `<body name="notes">` section).
+
+- **A / B** move focus between references on the page. At a page edge the reader turns the page and focuses the first or last reference there. If the current page has none, it scans up to 25 pages forward and then backward.
+- The focused reference gets the same cursor marker as the file manager.
+- A note panel opens at the bottom with the printed label (for example `[1]`), the note heading when present, the note body (24 px serif), an `n/m` counter and a scrollbar for long notes.
+- **Hold B + tap A** scrolls the note up; **hold A + tap B** scrolls it down. The font-size gestures are repurposed in this mode.
+- **A+B (short)** leaves the mode. The page may shift up while browsing so the focused reference is not hidden behind the panel; this shift is visual only and the saved reading position does not change.
+- A broken reference shows `Footnote text not found.`
 
 ## Host tests
 
-The parsers, the text model and the layout have host tests that need no ESP-IDF and no hardware:
-
-```bash
-./tests/run_tests.sh          # Linux/macOS, g++
-```
+The parser and layout tests build with a host g++ and do not need ESP-IDF. On Windows:
 
 ```powershell
-.\tests\run_tests.ps1         # Windows, MinGW g++
-.\tests\run_tests.ps1 -Filter test_layout
+.\tests\run_tests.ps1
 ```
 
-The suite covers TXT/MD/FB2/EPUB/PDF parsing, note and reference resolution (labels, targets, broken links), pagination invariants (no text lost or duplicated), hyphenation, widow/orphan rules and the layout's link rectangles. CI runs the same suite on Ubuntu.
+Run one target:
+
+```powershell
+.\tests\run_tests.ps1 -Filter test_epub
+```
+
+The runner uses MinGW-w64 g++; the `$gxx` path at the top of `tests/run_tests.ps1` is machine-specific, so change it if your toolchain lives elsewhere. Targets are `test_txt`, `test_md`, `test_fb2`, `test_epub`, `test_pdf`, `test_links` and `test_layout`. They cover encoding detection and TXT paragraphs/seek, Markdown, FB2 and footnote links, EPUB (with the ZIP archive built in the test), PDF text/ToUnicode/xref, and layout with hyphenation.
 
 ## Tools
 
 | Tool | Purpose |
 |---|---|
-| `tools/idf_env.ps1` | activates the ESP-IDF environment (Windows) |
-| `tools/build.ps1` | build + flash shortcut |
-| `tools/fonts/gen_fonts.py` | regenerates the font atlas (PT Serif + JetBrains Mono, sizes 14/18/24/28/32) with FreeType mono hinting |
-| `tools/fonts/compare_rendering.py` | compares rasterisation methods and sizes, reports ink loss per size |
-| `tools/icons/import_icons.py` | packs the exported PNG icons into a 1-bit sprite atlas |
-| `tools/make_demo.py` | generates the demo books used during development |
-| `tools/make_palette.py` | writes the 16-level palette files (`docs/palette/`) |
-| `tools/devtool.py` | serial client: screenshots, dumps, file transfer, benchmarks, key injection |
-| `tools/figma*.py` | read a Figma file through the API and dump exact element geometry |
+| `tools/fonts/gen_fonts.py` | Regenerates the PT Serif and JetBrains Mono bitmap atlases in `firmware/main/text/atlas/`. |
+| `tools/icons/import_icons.py` | Packs the PNG icon set in `icons/` into the 1-bit C++ icon atlas. |
+| `tools/devtool.py` | USB serial client: screenshots, upload/download, key injection, `dump` and `bench`. |
+| `tools/make_demo.py` | Generates the sample books in `demo/` (TXT, CP1251 TXT, Markdown, FB2, EPUB and PDF). |
 
 ## Project layout
 
-```
-firmware/
-  main/board/       M5Unified init, SD, battery, e-ink update policy
-  main/input/       button gestures and the input task
-  main/formats/     TXT, Markdown, FB2, EPUB, PDF parsers
-  main/text/        text model, font atlas, paginator, hyphenation
-  main/store/       JSON progress and settings
-  main/ui/          screens, layout rendering, icon atlas
-  main/debug/       serial console
-tools/              font/icon/palette generators, serial client
-tests/              host tests (no ESP-IDF)
-docs/               architecture, engineering decisions, screenshots, palette
-vendor/             M5PaperDIY-UserDemo as a git submodule (components are fetched)
+```text
+ereader/
+  firmware/   ESP-IDF application: main/, generated font atlases, partition table
+  vendor/     M5PaperDIY-UserDemo SDK checkout (M5GFX, M5Unified, LGFX_Fonts, mooncake)
+  tools/      font/icon generators, serial devtool, demo generator, build scripts
+  tests/      host C++ tests and run_tests.ps1
+  demo/       generated sample books
+  docs/       architecture, decisions, screenshots
+  icons/      source PNG icons
 ```
 
 ## Debug console
 
-The firmware exposes a line-based console over USB serial (115200, USB-Serial-JTAG):
+The firmware runs a command console on USB-Serial-JTAG. Every command starts with `rdr `. `tools/devtool.py` is a convenient client.
 
-| Command | Effect |
+| Command | Action |
 |---|---|
-| `rdr ping` | version banner |
-| `rdr dump` | text of the current screen (file manager listing or reader page) |
-| `rdr shot [x y w h]` | grayscale screenshot, read in bands |
-| `rdr key A\|B\|AB\|ABL\|UP\|DN`, `rdr burst B 5` | inject gestures |
-| `rdr open <path>`, `rdr openb64 <base64>`, `rdr openidx <n>` | open a file |
-| `rdr get <path>`, `rdr getb64 <path>`, `rdr put <path> <base64>` | file transfer |
-| `rdr ls <dir>`, `rdr rm <path>` | directory listing / delete |
-| `rdr stats` | refresh statistics (full/partial flushes, last region, timing) |
-| `rdr bench` | panel timing benchmark |
-| `rdr clean` | force one full GC16 repaint |
-| `rdr heal <path>` | run the encoding repair on a file |
-| `rdr limit <bytes>` | override the open size limit (0 restores defaults) |
-| `rdr bat`, `rdr pek` | battery voltage/percent, PMIC power-key state |
-| `rdr reboot` | real power cycle (keeps progress) |
-| `rdr reset` | reset the saved progress |
+| `ping` | Check the console; replies with `rdr pong`. |
+| `dump` | Print the text currently drawn on screen (reader page or file list). |
+| `shot [x y w h]` | Capture the panel, optionally a rectangle; `devtool.py` saves it as PNG. |
+| `key A/B/AB/ABL/UP/DN` | Inject a button gesture. |
+| `open <path>`, `openidx <n>` | Open a file by path or by current list index. |
+| `put <path> <base64>` | Upload a file to the SD card. |
+| `get <path>`, `getb64 <path>` | Download a file raw or base64-encoded. |
+| `ls <dir>`, `rm <path>` | List a directory or delete a file. |
+| `heal <path>` | Repair a broken TXT, Markdown or FB2 file. |
+| `reset` | Forget the saved progress and return to the file manager root. |
+| `clean` | Force a full GC16 repaint to clear ghosting. |
+| `stats` | Print refresh counters, the last region and its duration. |
+| `bat`, `pek` | Print battery millivolts/percentage, or PMIC key state. |
+| `limit <bytes>` | Override the open-size limit for testing. |
+| `bench` | Measure panel refresh times for several modes and areas. |
+| `reboot` | Restart the board. |
 
 ## Known limitations
 
-- Page numbers depend on the layout, so they are recomputed after a font change (and counted in the background, not instantly).
-- PDF only supports files with a text layer; scans are rejected with a message.
-- No CSS in EPUB beyond basic block/inline markup, no images, no tables beyond simple ones.
-- The power key cannot be remapped: the PMIC handles single and double presses itself.
-- Progress is stored on the SD card; a missing card means no progress (and a message on screen).
+- **Page numbers are layout-dependent.** A saved page is restored only when the font size and margins match; after a font change the reader re-walks the book to find the page. TXT, Markdown and FB2 do not compute a total page count (the footer shows `N / ...`); EPUB and PDF count it in the background when memory allows.
+- **PDF without a text layer is rejected.** Scanned, image-only PDFs show `PDF has no text layer (scans are not supported)`; there is no OCR or raster rendering.
+- **Size limits are enforced before opening.** The file manager greys out files above the open limit (8 MiB for text formats and EPUB, 12 MiB for PDF); parsers may apply lower internal caps, so oversized books are refused rather than truncated.
+- **The power key belongs to the PMIC.** A single press power-cycles the board and a double press switches it off; the firmware cannot use it for navigation. Progress is saved on every page turn, so a restart reopens at the same place.
+- **v1 scope:** the firmware does not use Wi-Fi and has no OCR, DRM, text search or bookmarks.
 
 ## License
 
-MIT — see [LICENSE](LICENSE). The vendored `M5PaperDIY-UserDemo` and the components it fetches (M5GFX, M5Unified, LGFX_Fonts) are MIT-licensed by M5Stack; `tests/support/miniz` carries its own permissive license.
+MIT. See [LICENSE](LICENSE).
+
+Bundled third-party code and fonts keep their own licenses: M5GFX, M5Unified and LGFX_Fonts in `vendor/`, PT Serif (ParaType Free Font License) and JetBrains Mono (SIL OFL 1.1). Font details are in [tools/fonts/README.md](tools/fonts/README.md).
+
+Architecture and design notes: [docs/architecture.md](docs/architecture.md) and [docs/decisions.md](docs/decisions.md).
