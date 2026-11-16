@@ -385,6 +385,16 @@ Date: 2026-11-13. Based on specification v1.1 and the customer's answers.
     3) with a small page shift in link mode, redraw only the bar of the
        changed lines, not the whole content.
 
+58. **Note panel: half a screen for long notes, and the page scrolls instead of the
+    panel shrinking.** The dynamic height now applies to short notes only: anything that
+    needs more than half of the usable height gets exactly half (previously the panel could
+    shrink to 140 px, which made long footnotes painful to read and to scroll). The focused
+    reference is kept visible by shifting the page and clipping the lines that leave the
+    band between the header and the panel, not by squeezing the panel. Measured: a long note
+    gets a 459-px panel with the cursor at 399–422 px, a short one 172 px with the cursor at
+    715–738 px, i.e. always above the panel border. Leaving the mode still restores the exact
+    reading position, because the paginator is never touched.
+
 ## v1 limitations
 
 - Files up to 10 MB (PDF), up to 8 MB (text/EPUB), limited by free

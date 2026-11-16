@@ -1062,7 +1062,9 @@ void App::prepare_link_text() {
 
     constexpr int kPad = 24;
     constexpr int kPanelMin = 140;
-    const int panel_max = std::max(kPanelMin, height * 2 / 5);
+    // A long note gets half the screen: the panel is never taller (the page keeps the
+    // other half) and never shorter than that for long notes.
+    const int panel_max = std::max(kPanelMin, (height - kFooterHeight) / 2);
 
     std::string text;
     if (link.note == 0) {
@@ -1094,34 +1096,26 @@ void App::prepare_link_text() {
         _link_lines_note = link.note;
     }
 
-    // Panel height follows the content: a short note gets a short panel, a long one
-    // is capped at the usual maximum. Header block + body + bottom padding.
+    // Panel height follows the content for SHORT notes only. A note that needs more
+    // than half the screen always gets half the screen: a squeezed panel made long
+    // footnotes painful to read and to scroll.
     const int header_h = 4 + 12 + heading.line_height + 10 + 10 + 10;
     const int body_h = static_cast<int>(_link_lines.size()) * body.line_height;
-    int panel_h = std::max(kPanelMin, header_h + body_h + 18);
+    const int wanted_h = header_h + body_h + 18;
+    const int half_screen = (height - kFooterHeight) / 2;
+    int panel_h = wanted_h < half_screen ? std::max(kPanelMin, wanted_h) : half_screen;
     if (panel_h > panel_max) panel_h = panel_max;
 
-    // Keep the focused reference visible above the panel (and above its shadow). The
-    // paginator is untouched, so leaving the mode restores the normal reading position.
+    // The focused reference must always stay visible. The panel is not shrunk for
+    // that: the page is shifted instead, and lines that leave the visible band are
+    // skipped when drawing. The paginator is untouched, so leaving the mode restores
+    // the normal reading position.
     _page_shift = 0;
-    const int shadow_band = 0;
     if (link.line >= 0 && link.line < static_cast<int>(_page.lines.size()) && !_page.lines.empty()) {
         const LineView& line = _page.lines[static_cast<size_t>(link.line)];
-        int panel_top = height - kFooterHeight - panel_h;
-        int limit = panel_top - shadow_band - 8;
+        const int panel_top = height - kFooterHeight - panel_h;
+        const int limit = panel_top - 10;
         if (line.baseline > limit) _page_shift = limit - line.baseline;
-
-        const int header_limit = kHeaderHeight + 4; // content must not enter the header
-        const int first_y = _page.lines.front().y;
-        const int min_shift = header_limit - first_y;
-        if (_page_shift < min_shift) _page_shift = min_shift;
-
-        // Still hidden? Shrink the panel so the line becomes visible.
-        const int shifted = line.baseline + _page_shift;
-        if (shifted > panel_top - shadow_band - 8) {
-            const int wanted = height - kFooterHeight - (shifted + shadow_band + 8);
-            if (wanted < panel_h) panel_h = std::max(kPanelMin, wanted);
-        }
     }
     _link_panel_h = panel_h;
 
@@ -1873,6 +1867,12 @@ void App::render_content() {
         // real allocation load. The shift is applied at the drawing calls instead.
         const int line_y = line.y + shift;
         const int base = line.baseline + shift;
+        // The page is shifted while browsing notes: drop the lines that leave the
+        // visible band instead of drawing them over the header or under the panel.
+        if (_link_mode && _link_panel_h > 0) {
+            const int panel_top = board().height() - kFooterHeight - _link_panel_h;
+            if (line_y < kHeaderHeight || line_y + line.height > panel_top) continue;
+        }
         if (line.kind == ParaKind::Separator) {
             gfx.drawFastHLine(line.x, base, width - 2 * kMarginLeft, TFT_BLACK);
             continue;
