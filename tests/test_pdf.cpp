@@ -239,7 +239,7 @@ void test_pdf_without_text_layer() {
     std::string error;
     auto document = open_string(pdf, &error);
     CHECK(document == nullptr);
-    CHECK_STR(error, "PDF не содержит текстового слоя (сканы не поддерживаются)");
+    CHECK_STR(error, "PDF has no text layer (scans are not supported)");
 }
 
 void test_encrypted_pdf() {
@@ -253,7 +253,7 @@ void test_encrypted_pdf() {
     std::string error;
     auto document = open_string(pdf, &error);
     CHECK(document == nullptr);
-    CHECK_STR(error, "PDF зашифрован");
+    CHECK_STR(error, "PDF is encrypted");
 }
 
 // Type0 without /ToUnicode must not emit garbage; the page is skipped and the
@@ -273,7 +273,7 @@ void test_type0_without_tounicode() {
     std::string error;
     auto document = open_string(pdf, &error);
     CHECK(document == nullptr);
-    CHECK_STR(error, "PDF не содержит текстового слоя (сканы не поддерживаются)");
+    CHECK_STR(error, "PDF has no text layer (scans are not supported)");
 }
 
 // ---------------------------------------------------------------------------

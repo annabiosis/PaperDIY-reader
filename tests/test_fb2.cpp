@@ -300,13 +300,13 @@ void test_garbage_and_limits() {
     const std::string oversized(6u * 1024u * 1024u + 1, 'a');
     document = open_memory(oversized, error);
     CHECK(document == nullptr);
-    CHECK(error == "файл слишком большой");
+    CHECK(error == "file is too large");
 
     // CP1251 text grows on conversion, so a 4 MB source exceeds the 6 MB cap.
     const std::string cp1251_bomb(4u * 1024u * 1024u, static_cast<char>(0xD0));
     document = open_memory(cp1251_bomb, error);
     CHECK(document == nullptr);
-    CHECK(error == "файл слишком большой");
+    CHECK(error == "file is too large");
 }
 
 void test_utf8_bom() {

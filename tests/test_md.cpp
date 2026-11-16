@@ -210,7 +210,7 @@ void check_main_fixture() {
     }
 
     const Paragraph* links = find_para(
-        paragraphs, "A link text and [изображение: alt text] and [изображение].", ParaKind::Text);
+        paragraphs, "A link text and [image: alt text] and [image].", ParaKind::Text);
     CHECK(links != nullptr);
 
     const Paragraph* escapes =
