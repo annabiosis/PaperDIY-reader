@@ -136,7 +136,10 @@ void send_screenshot(int x, int y, int w, int h) {
     heap_caps_free(gray);
 }
 
-void handle_put(const char* args) {
+// Writes one base64 chunk to a file; `append` keeps the existing bytes. Uploading a
+// 760 KB book is impossible in one console line (the line buffer is 4 KB), so the host
+// tool sends it in pieces and only the first piece truncates the file.
+void handle_put(const char* args, bool append) {
     while (*args == ' ') ++args;
     const char* space = std::strchr(args, ' ');
     if (space == nullptr || space == args) {
@@ -154,7 +157,7 @@ void handle_put(const char* args) {
     std::vector<uint8_t> data = base64_decode(payload, payload_len);
 
     std::string full = std::string("/sdcard/") + path;
-    FILE* file = std::fopen(full.c_str(), "wb");
+    FILE* file = std::fopen(full.c_str(), append ? "ab" : "wb");
     if (file == nullptr) {
         write_str("rdr err open-failed\n");
         return;
@@ -393,7 +396,11 @@ void handle_command(char* line) {
         return;
     }
     if (std::strcmp(verb, "put") == 0) {
-        handle_put(arguments);
+        handle_put(arguments, false);
+        return;
+    }
+    if (std::strcmp(verb, "append") == 0) {
+        handle_put(arguments, true);
         return;
     }
     if (std::strcmp(verb, "echo") == 0) {

@@ -419,6 +419,11 @@ Date: 2026-11-13. Based on specification v1.1 and the customer's answers.
     `mode, focus, links, lines, visible, max, panel_h, shift`. It made the geometry
     regression above visible over serial without reading pixels.
 
+62. **Chunked uploads (`rdr append`).** A console line is capped at 4 KB, so a 760 KB book
+    cannot be sent with a single `put`. `rdr append` writes one base64 chunk in append mode;
+    the host sends ~2.9 KB pieces and checks each `rdr ok <n>` reply. Restoring the test book
+    took 65 s for 759 964 bytes.
+
 ## v1 limitations
 
 - Files up to 10 MB (PDF), up to 8 MB (text/EPUB), limited by free
