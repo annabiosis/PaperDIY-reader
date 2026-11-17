@@ -9,6 +9,10 @@ A paginated e-ink ebook reader for the M5Stack M5PaperDIY (K159 / K159-B).
 - **Version:** reported by the firmware itself — `rdr version` over the debug console, or the
   `E-Reader <version>` line in the boot log. See [CHANGELOG.md](CHANGELOG.md).
 
+<img src="docs/photo.jpg" alt="PaperDIY Reader on a desk, showing page 6 of 909 of an EPUB" width="720">
+
+*The firmware running on the M5PaperDIY: page 6 of 909 of an EPUB, battery at 96 %.*
+
 ## Screenshots
 
 All frames are read back from the panel itself over the debug console, at the native 540 × 960.
