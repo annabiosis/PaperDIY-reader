@@ -1,8 +1,8 @@
-# E-Reader for M5PaperDIY
+# E-Reader for M5Stack PaperDIY
 
-A paginated e-ink ebook reader for the M5Stack M5PaperDIY (K159 / K159-B).
+A paginated e-ink ebook reader for the M5Stack PaperDIY (K159 / K159-B).
 
-- **Hardware:** M5PaperDIY, ESP32-S3, 540 × 960 parallel e-ink panel with 16 grayscale levels, PSRAM, microSD, buttons A/B.
+- **Hardware:** M5Stack PaperDIY, ESP32-S3, 540 × 960 parallel e-ink panel with 16 grayscale levels, PSRAM, microSD, buttons A/B.
 - **Firmware:** ESP-IDF 5.5.1.
 - **Formats:** TXT, Markdown, FB2, EPUB, PDF (text layer only).
 - **License:** MIT.
@@ -11,7 +11,7 @@ A paginated e-ink ebook reader for the M5Stack M5PaperDIY (K159 / K159-B).
 
 <img src="docs/photo.jpg" alt="PaperDIY Reader on a desk, showing page 6 of 909 of an EPUB" width="720">
 
-*The firmware running on the M5PaperDIY: page 6 of 909 of an EPUB, battery at 96 %.*
+*The firmware running on the M5Stack PaperDIY: page 6 of 909 of an EPUB, battery at 96 %.*
 
 ## Screenshots
 
@@ -88,7 +88,7 @@ All frames are read back from the panel itself over the debug console, at the na
 
 | Item | Requirement |
 |---|---|
-| Board | M5PaperDIY (K159 / K159-B): ESP32-S3, 540 × 960 16-level e-ink, PSRAM, microSD, buttons A/B |
+| Board | M5Stack PaperDIY (K159 / K159-B): ESP32-S3, 540 × 960 16-level e-ink, PSRAM, microSD, buttons A/B |
 | SDK | ESP-IDF 5.5.1 with the ESP32-S3 toolchain |
 | Host tools | Python 3; Pillow for the generators and `devtool.py` screenshots (freetype-py for hinted atlases); pyserial for `tools/devtool.py` |
 | Card | microSD formatted as FAT32 |
